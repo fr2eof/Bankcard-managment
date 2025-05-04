@@ -1,5 +1,6 @@
 package com.pet.card_system.security.service.impl;
 
+import com.pet.card_system.core.exception.InvalidTokenTypeException;
 import com.pet.card_system.security.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -15,6 +16,9 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ACCESS_TOKEN_TYPE = "access";
+    private static final String REFRESH_TOKEN_TYPE = "refresh";
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -31,18 +35,18 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateAccessToken(Long userId) {
-        return generateToken(userId, accessTokenExpiration);
+        return generateToken(userId, accessTokenExpiration, ACCESS_TOKEN_TYPE);
     }
 
     @Override
     public String generateRefreshToken(Long userId) {
-        return generateToken(userId, refreshTokenExpiration);
+        return generateToken(userId, refreshTokenExpiration, REFRESH_TOKEN_TYPE);
     }
 
-//    todo make token type
-    private String generateToken(@NotNull Long userId, long expiration) {
+    private String generateToken(@NotNull Long userId, long expiration, String tokenType) {
         return Jwts.builder()
                 .setSubject(userId.toString())
+                .claim(TOKEN_TYPE_CLAIM, tokenType)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSecretKey())
@@ -60,8 +64,13 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String refreshToken(String refreshToken) {
         Claims claims = validateAndParseToken(refreshToken);
+
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+        if (!REFRESH_TOKEN_TYPE.equals(tokenType)) {
+            throw new InvalidTokenTypeException("Invalid token type. Refresh token expected.");
+        }
+
         String userId = claims.getSubject();
         return generateAccessToken(Long.valueOf(userId));
     }
-
 }
