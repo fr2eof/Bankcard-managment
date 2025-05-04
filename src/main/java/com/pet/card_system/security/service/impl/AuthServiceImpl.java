@@ -7,10 +7,10 @@ import com.pet.card_system.core.exception.UserNotFoundException;
 import com.pet.card_system.core.repository.UserRepository;
 import com.pet.card_system.core.repository.entity.User;
 import com.pet.card_system.security.service.AuthService;
+import com.pet.card_system.security.util.PasswordEncoder;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
