@@ -5,13 +5,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PasswordEncoder extends BCryptPasswordEncoder {
-    //todo finish
-    public String encode(String rawPassword) {
-        return "asdasdasd";
+
+    public PasswordEncoder() {
+        super(12);
     }
 
-    //todo finish
-    public boolean matches(String rawPassword, String encodedPassword) {
-        return false;
+    @Override
+    public String encode(CharSequence rawPassword) {
+        return super.encode(rawPassword);
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return super.matches(rawPassword, encodedPassword);
+    }
+
+    public boolean upgradeEncoding(String encodedPassword) {
+        return super.upgradeEncoding(encodedPassword);
     }
 }
