@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003
+      author: you
+      changes:
+        - createTable:
+            tableName: card_action_requests
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: card_id
+                  type: BIGINT
+              - column:
+                  name: action_type
+                  type: VARCHAR(50)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+              - column:
+                  name: user_comment
+                  type: VARCHAR(500)
+              - column:
+                  name: admin_comment
+                  type: VARCHAR(500)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - addForeignKeyConstraint:
+            constraintName: fk_card_action_requests_card
+            baseTableName: card_action_requests
+            baseColumnNames: card_id
+            referencedTableName: cards
+            referencedColumnNames: id
