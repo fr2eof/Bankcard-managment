@@ -132,6 +132,44 @@ public class CardServiceImpl implements CardService {
                 .toList();
     }
 
+    @Transactional
+    @Override
+    public void transferBetweenCards(CardTransferRequestDTO request) {
+        if (request.getSourceCardId().equals(request.getTargetCardId())) {
+            throw new IllegalArgumentException("Cannot transfer to the same card");
+        }
+
+        Card fromCard = cardRepository.findById(request.getSourceCardId())
+                .orElseThrow(() -> new CardNotFoundException("Source card not found"));
+
+        Card toCard = cardRepository.findById(request.getSourceCardId())
+                .orElseThrow(() -> new CardNotFoundException("Destination card not found"));
+
+        if (!fromCard.getStatus().equals(CardStatus.ACTIVE)) {
+            throw new IllegalStateException("Source card is not active");
+        }
+
+        if (!toCard.getStatus().equals(CardStatus.ACTIVE)) {
+            throw new IllegalStateException("Destination card is not active");
+        }
+
+        BigDecimal amount = request.getAmount();
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
+        if (fromCard.getBalance().compareTo(amount) < 0) {
+            throw new IllegalStateException("Insufficient funds on source card");
+        }
+
+        fromCard.setBalance(fromCard.getBalance().subtract(amount));
+        toCard.setBalance(toCard.getBalance().add(amount));
+
+        cardRepository.save(fromCard);
+        cardRepository.save(toCard);
+
+    }
+
 
     @Override
     @Transactional

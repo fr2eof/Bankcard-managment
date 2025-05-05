@@ -36,4 +36,6 @@ public interface CardService {
 
     List<CardBalanceDTO> getUserCardBalances(Long userId);
 
+    void transferBetweenCards(CardTransferRequestDTO request);
+
 }
