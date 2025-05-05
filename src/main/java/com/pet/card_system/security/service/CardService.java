@@ -1,15 +1,9 @@
 package com.pet.card_system.security.service;
 
-import com.pet.card_system.core.dto.CardActionRequestCreateDTO;
-import com.pet.card_system.core.dto.CardActionRequestProcessDTO;
-import com.pet.card_system.core.repository.entity.CardActionRequest;
-import com.pet.card_system.core.dto.CardCreateRequest;
-import com.pet.card_system.core.dto.CardDTO;
+import com.pet.card_system.core.dto.*;
 import com.pet.card_system.core.repository.entity.CardStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 public interface CardService {
 
@@ -27,9 +21,11 @@ public interface CardService {
 
     void deleteCard(Long cardId);
 
-    List<CardDTO> getUserCards(Long userId);
+    Page<CardDTO> getUserCards(Long userId, Pageable pageable);
 
-    CardActionRequest createRequest(Long cardId, CardActionRequestCreateDTO blockRequestDTO);
+    Page<CardDTO> getUserCards(Long userId, CardSearchCriteria criteria, Pageable pageable);
+
+    void createRequest(Long cardId, CardActionRequestCreateDTO blockRequestDTO);
 
     CardDTO getCardDetails(Long cardId);
 

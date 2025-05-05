@@ -1,10 +1,7 @@
 package com.pet.card_system.security.service.impl;
 
-import com.pet.card_system.core.dto.CardActionRequestCreateDTO;
-import com.pet.card_system.core.dto.CardActionRequestProcessDTO;
+import com.pet.card_system.core.dto.*;
 import com.pet.card_system.core.repository.entity.*;
-import com.pet.card_system.core.dto.CardCreateRequest;
-import com.pet.card_system.core.dto.CardDTO;
 import com.pet.card_system.core.exception.CardNotFoundException;
 import com.pet.card_system.core.exception.RequestNotFoundException;
 import com.pet.card_system.core.exception.UserNotFoundException;
@@ -13,14 +10,17 @@ import com.pet.card_system.core.repository.CardActionRequestRepository;
 import com.pet.card_system.core.repository.CardRepository;
 import com.pet.card_system.core.repository.UserRepository;
 import com.pet.card_system.security.service.CardService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,6 +36,9 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public CardDTO createCard(CardCreateRequest request) {
+        if (request.expiryDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Expiry date cannot be in the past");
+        }
         Long userId = request.userId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " not found"));
@@ -55,13 +58,46 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CardDTO> getUserCards(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " not found"));
+    public Page<CardDTO> getUserCards(Long userId, Pageable pageable) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException("User with id: " + userId + " not found");
+        }
 
-        return cardRepository.findByUserId(userId).stream()
-                .map(cardMapper::toDTO)
-                .toList();
+        Page<Card> cardsPage = cardRepository.findByUserId(userId, pageable);
+
+        return cardsPage.map(cardMapper::toDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CardDTO> getUserCards(Long userId, CardSearchCriteria criteria, Pageable pageable) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException("User with id: " + userId + " not found");
+        }
+
+        if (criteria.getMinBalance() != null && criteria.getMaxBalance() != null
+                && criteria.getMinBalance().compareTo(criteria.getMaxBalance()) > 0) {
+            throw new IllegalArgumentException("Invalid balance range");
+        }
+
+        Specification<Card> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("user").get("id"), userId));
+
+            if (criteria.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), criteria.getStatus()));
+            }
+            if (criteria.getMinBalance() != null) {
+                predicates.add(cb.ge(root.get("balance"), criteria.getMinBalance()));
+            }
+            if (criteria.getMaxBalance() != null) {
+                predicates.add(cb.le(root.get("balance"), criteria.getMaxBalance()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return cardRepository.findAll(spec, pageable).map(cardMapper::toDTO);
     }
 
     @Override
@@ -119,7 +155,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public CardActionRequest createRequest(Long cardId, CardActionRequestCreateDTO requestCreateDTO) {
+    public void createRequest(Long cardId, CardActionRequestCreateDTO requestCreateDTO) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new CardNotFoundException("Card with id: " + cardId + " not found"));
 
@@ -130,7 +166,7 @@ public class CardServiceImpl implements CardService {
                 .userComment(requestCreateDTO.userComment())
                 .build();
 
-        return requestRepository.save(request);
+        requestRepository.save(request);
     }
 
 
