@@ -114,6 +114,26 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    public BigDecimal getCardBalance(Long cardId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardNotFoundException("Card not found with id: " + cardId));
+        return card.getBalance();
+    }
+
+    @Override
+    public List<CardBalanceDTO> getUserCardBalances(Long userId) {
+        List<Card> cards = cardRepository.findAllByUserId(userId);
+        return cards.stream()
+                .map(card -> CardBalanceDTO.builder()
+                        .cardId(card.getId())
+                        .numberMasked(card.getNumberMasked())
+                        .balance(card.getBalance())
+                        .build())
+                .toList();
+    }
+
+
+    @Override
     @Transactional
     public CardDTO updateCardStatus(Long cardId, CardStatus status) {
         return switch (status) {
