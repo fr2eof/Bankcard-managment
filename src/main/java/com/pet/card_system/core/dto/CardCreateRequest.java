@@ -23,6 +23,7 @@ public record CardCreateRequest(
         @Future(message = "Expiry date must be in the future")
         LocalDate expiryDate,
 
+        @NotNull(message = "User ID is required")
         Long userId
 ) {
 }
