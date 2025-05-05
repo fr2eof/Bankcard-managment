@@ -1,6 +1,8 @@
 package com.pet.card_system.api.exception;
 
 import com.pet.card_system.core.dto.ErrorResponse;
+import com.pet.card_system.core.exception.CardNotFoundException;
+import com.pet.card_system.core.exception.RequestNotFoundException;
 import com.pet.card_system.core.exception.UserAlreadyExistsException;
 import com.pet.card_system.core.exception.UserNotFoundException;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -40,6 +42,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse("USER_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(RequestNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(RequestNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("REQUEST_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(CardNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(CardNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("CARD_NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(EmptyResultDataAccessException.class)
