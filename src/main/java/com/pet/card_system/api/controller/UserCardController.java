@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/cards")
@@ -55,11 +56,17 @@ public class UserCardController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-
-    @PostMapping("/transfer")
-    public ResponseEntity<TransferResponse> transferBetweenCards(
-            @RequestBody TransferRequest request) {
-        return ResponseEntity.ok().body(new TransferResponse());
-        // Перевод между картами пользователя
+    @GetMapping("/{cardId}/balance")
+    public ResponseEntity<BigDecimal> getCardBalance(@PathVariable Long cardId) {
+        BigDecimal balance = cardService.getCardBalance(cardId);
+        return ResponseEntity.ok(balance);
     }
+
+    @GetMapping("/{userId}/balances")
+    public ResponseEntity<List<CardBalanceDTO>> getUserCardBalances(@PathVariable Long userId) {
+        List<CardBalanceDTO> balances = cardService.getUserCardBalances(userId);
+        return ResponseEntity.ok(balances);
+    }
+
+
 }
